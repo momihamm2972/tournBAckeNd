@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from django.http import HttpResponse
 from rest_framework.views import APIView
-from .serializer import moha, ChatsSerializer, MessageSerializer,GlobalFriendSerializer,InviteFriendSerializer
+from .serializer import mohaSerializer, ChatsSerializer, MessageSerializer,GlobalFriendSerializer,InviteFriendSerializer
 from .models import Message,Invitations,Tournament
 from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
@@ -166,50 +166,33 @@ def getNotifications(request):
     return Response(serializer.data, status=status.HTTP_200_OK) 
 
 
-
-
-
-
-
-#momihamm
-
-
-# method    endpoint/route      protocol/version
-# POST      /getNotifications/ HTTP/1.1
-# Host: localhost
-# Content-Type: application/json
-
-# {'userid1': 1, 'userid2': 2, 'userid3': 3, 'tournamentCreator': 4}
-
-# @api_view(['GET']) #methode dyalak
-# @permission_classes([IsAuthenticated])# khasek tkon atuhticated
-
-# def getNotifications(request): #prototype dyala function
-    #logic dyalak
-
 def msg(user1, user2, mesg_text):
-    friendship_id = 0 
+    print(f"User1: {user1}, User2: {user2}") 
     try:
-        invitation_instance = Invitations.objects.get(friendship_id=friendship_id)
-    
-    # Create the message and associate it with the invitation
+        invitation_instance = Invitations.objects.get(
+            (Q(user1=user1, user2=user2) | Q(user1=user2, user2=user1)),
+            status="accepted",
+            type="friend"
+        )
+        print(f"Invitation found: {invitation_instance.friendship_id}")  
         message = Message(
-            chat_id=invitation_instance,  # Use the invitation instance
-            sender_id=mainUser,
-            msg=message_text,
+            chat_id=invitation_instance,
+            sender_id=user1, 
+            msg=mesg_text, 
         )
         message.save()
-        print("Message sent successfully")
-    
+        print("Message sent successully")
     except Invitations.DoesNotExist:
-        print("No invitation found with that friendship_id")
+        print("No invitation matches the criteria.")
+    except Invitations.MultipleObjectsReturned:
+        print("Multiple invitations match the criteria. Please refine your query.") 
 
 
 def sendmsg(mainUser, userid1, userid2, userid3):
     tournamentUsersId = [mainUser, userid1, userid2, userid3]
     invitID = []
+    print(mainUser) 
     for i in range(0, len(tournamentUsersId), 2):
-        # Ensure we don't go out of bounds
         if i + 1 < len(tournamentUsersId):
             recdata = {
                 'user1': tournamentUsersId[i],
@@ -218,17 +201,16 @@ def sendmsg(mainUser, userid1, userid2, userid3):
                 'type': 'join'        # Matches InvitationType   
             }
             print(recdata)
-        serializer = moha(data=recdata)
+            print("\n\n\n")
+        serializer = mohaSerializer(data=recdata) 
         if serializer.is_valid():
             print("valid") 
             serializer.save()
-            # invitID[] =  
-            msg(tournamentUsersId[i] , tournamentUsersId[i+1], "You have been invited to a tournament , join now")
+            print (tournamentUsersId[i+1]) 
+            msg(mainUser , tournamentUsersId[i+1], "You have been invited to a tournament , join now")  
         else:
-            print("not valid")
             print(serializer.errors)   
-        # userid += 1 
-    #     serializer.save()
+    msg(mainUser , tournamentUsersId[2], "khouna doz t9sser , daba nikek") 
 
 
 
@@ -259,7 +241,7 @@ class CreateTournament(APIView):
             self.userid2 = data.get('userid2')
             self.userid3 = data.get('userid3') 
             # self.mainUser = request.user.id
-            self.mainUser = 12 
+            self.mainUser = 1337
             self.tournamentUsersId = [self.userid1, self.userid2, self.userid3]
             print (self.mainUser)
             if (not self.userid1 or not self.userid2 or not self.userid3):
@@ -270,52 +252,14 @@ class CreateTournament(APIView):
                     'user2': self.userid,
                     'type': 'tournament'
                 }
-                # print (recordData)
                 newRecord = InviteFriendSerializer(data=recordData)
                 if (newRecord.is_valid()):
                     newRecord.save()
                 else:
                     return Response("invitation failed", status=status.HTTP_400_BAD_REQUEST)
-            # tournamentUsersId = [mainUser, userid1, userid2, userid3]
-            #fun of tournament
             init_tornament(mainUser=self.mainUser, userid1=self.userid1, userid2=self.userid2, userid3=self.userid3)
             sendmsg(mainUser=self.mainUser, userid1=self.userid1, userid2=self.userid2, userid3=self.userid3)
             return Response("Invited players successfuly", status=status.HTTP_201_CREATED)
-            # res = Response("Invited players successfuly", status=status.HTTP_201_CREATED)
-                # inviteFriend() 
             return Response({'message': 'Success'})
         except json.JSONDecodeError:
             return Response({'message': 'Error JSON'})
-        # logic here
-    # def test(self):
-    #     print ('test') 
-    #     return Response({'message': 'kayn chi haja'})
-    
-    # test()
-    # def addAccepted():
-    #     tornament.available_players += 1
-    #     switch (tormanemnt.available_players):
-    #         case 1:
-    #             tornament.position1 = 
-        # if 3adad == 3:
-        #     pos4 = main user  
-        # message mol tornowa howa li sift lmisaj( 
-        #     1, )
-
-        # return tornament
-
-
-#momihamm
-# method    endpoint/route      protocol/version
-######
-# def addAccepted():
-    #tormanemnt.3adad += 1
-    # switch (tormanemnt.3adad):
-    #     case 1:
-    #       tornament.pos1 = id dyal khona
-    # if 3adad == 3:
-    #   pos4 = main user  
-    # message mol tornowa howa li sift lmisaj(
-
-    # 1, )
-    # 

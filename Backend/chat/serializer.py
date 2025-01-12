@@ -23,7 +23,7 @@ class GlobalFriendSerializer(serializers.ModelSerializer):
 
 
 # momihamm
-class moha(serializers.ModelSerializer):
+class mohaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invitations
         fields = ['user1', 'user2', 'status', 'type']

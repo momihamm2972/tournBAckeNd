@@ -13,4 +13,5 @@ urlpatterns = [
     path('getChats/', getChats),
     path('getMessages/<int:chat>', getMessages),
     path('CreateTournament/', CreateTournament.as_view(), name='CreateTournament'),#momihamm
+    # path('NextRound/', CreateTournament.as_view(), name='NextRound'),#momihamm
 ]

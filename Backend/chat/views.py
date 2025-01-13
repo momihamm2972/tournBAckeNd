@@ -8,7 +8,7 @@ from .serializer import mohaSerializer, ChatsSerializer, MessageSerializer,Globa
 from .models import Message,Invitations,Tournament
 from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
-from user_management.models import User
+from user_management.models import User,Match
 import json
 
 
@@ -210,7 +210,8 @@ def sendmsg(mainUser, userid1, userid2, userid3):
             msg(mainUser , tournamentUsersId[i+1], "You have been invited to a tournament , join now")  
         else:
             print(serializer.errors)   
-    msg(mainUser , tournamentUsersId[2], "khouna doz t9sser , daba nikek") 
+    msg(mainUser , tournamentUsersId[2], "khouna doz t9sser , daba nikek")
+    # return mainUser
 
 
 
@@ -257,9 +258,56 @@ class CreateTournament(APIView):
                     newRecord.save()
                 else:
                     return Response("invitation failed", status=status.HTTP_400_BAD_REQUEST)
+            
             init_tornament(mainUser=self.mainUser, userid1=self.userid1, userid2=self.userid2, userid3=self.userid3)
             sendmsg(mainUser=self.mainUser, userid1=self.userid1, userid2=self.userid2, userid3=self.userid3)
             return Response("Invited players successfuly", status=status.HTTP_201_CREATED)
             return Response({'message': 'Success'})
         except json.JSONDecodeError:
             return Response({'message': 'Error JSON'})
+
+
+
+class NextRound(APIView):
+    def post(self, request):
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            
+            self.winner = data.get('winner')
+            self.loser = data.get('loser')
+            self.score = data.get('score')
+            print(self.winner)
+            print(self.loser)
+            print(self.score)
+            
+            # Try to get the match instance
+            match_instance = Match.objects.get(winner=self.winner)
+            print("**********")
+            print(match_instance.winner)
+            print("**********")
+            print(match_instance.loser)
+
+            try:
+                invitation = Invitations.objects.get(Q(user2=self.winner) & Q(type="tournament") & Q(status="accepted"))
+            except Exception as e:
+                print(e)
+            self.mainUser = invitation.user1
+            print(self.mainUser)
+            tornament_instance = Tournament.objects.get(tournamentID=self.mainUser)
+            print(self.winner, type(self.winner))
+            print(tornament_instance.position5)
+            # tornament_instance.position5 = self.winner
+            # tournament_instance.save()
+            # print(tornament_instance.position5)
+            
+            return Response({'message': 'Match added successfully'})
+        
+        except json.JSONDecodeError:
+            return Response({'message': 'Error: Invalid JSON format'}, status=400)
+        
+        except Match.DoesNotExist:
+            return Response({'message': f'Error: Match with winner "{self.winner}" does not exist'}, status=404)
+        
+        except Exception as e:
+            # General exception handling for unexpected errors
+            return Response({'message': f'Error: {str(e)}'}, status=500)  

@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import CreateTournament, getMessages,getChats,inviteFriend,getNotifications,acceptFriend,blockFriend,deblockFriend,declineFriend
+from .views import NextRound, CreateTournament, getMessages,getChats,inviteFriend,getNotifications,acceptFriend,blockFriend,deblockFriend,declineFriend
 from .consumers import ChatConsumer
 
 urlpatterns = [
@@ -13,5 +13,5 @@ urlpatterns = [
     path('getChats/', getChats),
     path('getMessages/<int:chat>', getMessages),
     path('CreateTournament/', CreateTournament.as_view(), name='CreateTournament'),#momihamm
-    # path('NextRound/', CreateTournament.as_view(), name='NextRound'),#momihamm
+    path('NextRound/', NextRound.as_view(), name='NextRound'),#momihamm
 ]
